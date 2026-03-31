@@ -1,0 +1,7 @@
+{
+  "name": "Scrape Agent",
+  "description": "A pay-per-use web scraping API built with x402. Send 0.01 USDC on Base to scrape any URL and receive clean extracted text — no subscription, no API key.",
+  "logoUrl": "/logos/scrape-agent.png",
+  "websiteUrl": "https://scrape-agent.vercel.app",
+  "category": "Services/Endpoints"
+}
