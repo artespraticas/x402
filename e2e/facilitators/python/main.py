@@ -23,6 +23,7 @@ logging.basicConfig(level=logging.INFO, format="%(name)s %(levelname)s: %(messag
 logging.getLogger("x402.permit2").setLevel(logging.DEBUG)
 logging.getLogger("x402.signers").setLevel(logging.DEBUG)
 
+from bazaar import BazaarCatalog
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -39,10 +40,9 @@ from x402.mechanisms.evm import FacilitatorWeb3Signer
 from x402.mechanisms.evm.constants import TX_STATUS_SUCCESS
 from x402.mechanisms.evm.exact import register_exact_evm_facilitator
 from x402.mechanisms.evm.types import TransactionReceipt
+from x402.mechanisms.evm.upto import UptoEvmFacilitatorScheme
 from x402.mechanisms.svm import FacilitatorKeypairSigner
 from x402.mechanisms.svm.exact import register_exact_svm_facilitator
-
-from bazaar import BazaarCatalog
 
 # Load environment variables
 load_dotenv()
@@ -194,19 +194,26 @@ facilitator = (
     .on_settle_failure(lambda ctx: print("Settle failure", ctx))
 )
 
+# Network configuration (from env or defaults)
+evm_network = os.environ.get("EVM_NETWORK", "eip155:84532") # Base Sepolia
+
 # Register EVM schemes (V1 and V2)
 register_exact_evm_facilitator(
     facilitator,
     evm_signer,
-    networks="eip155:84532",  # Base Sepolia
+    networks=evm_network,
     deploy_erc4337_with_eip6492=True,
 )
 
+# Register upto EVM scheme (V2 only)
+facilitator.register([evm_network], UptoEvmFacilitatorScheme(evm_signer))
+
 # Register SVM schemes (V1 and V2)
+svm_network = os.environ.get("SVM_NETWORK", "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1")
 register_exact_svm_facilitator(
     facilitator,
     svm_signer,
-    networks="solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",  # Devnet
+    networks=svm_network,
 )
 
 # Register gas sponsoring extensions
@@ -358,12 +365,31 @@ async def discovery_resources(limit: int = 100, offset: int = 0):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/discovery/search")
+async def discovery_search(query: str, type: str | None = None, limit: int | None = None):
+    """Search discovered resources using keyword matching.
+
+    Args:
+        query: The search query string (required).
+        type: Optional filter by resource type.
+        limit: Optional advisory maximum number of results.
+
+    Returns:
+        Search response with x402Version, items, and optional pagination hints.
+    """
+    try:
+        return bazaar_catalog.search_resources(query, type, limit)
+    except Exception as e:
+        print(f"Discovery search error: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
 @app.get("/health")
 async def health():
     """Health check endpoint."""
     return {
         "status": "ok",
-        "network": "eip155:84532",
+        "network": evm_network,
         "facilitator": "python",
         "version": "2.0.0",
         "extensions": facilitator.get_extensions(),

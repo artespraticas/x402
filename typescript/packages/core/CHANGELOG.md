@@ -1,5 +1,30 @@
 # @x402/core Changelog
 
+## 2.11.0
+
+### Minor Changes
+
+- a051f48: Enables `ResourceServerExtension` to register resource-server verify/settle hooks, and enforces extension mutation policy: `enrichPaymentRequiredResponse` may only change `payTo` / `amount` / `asset` when those baseline values are vacant; `scheme` / `network` / `maxTimeoutSeconds` and baseline `extra` entries are immutable. `enrichSettlementResponse` may not rewrite facilitator core fields (`success`, `transaction`, `network`, etc.). Lifecycle hook contexts are typed as read-only for core protocol fields.
+- dc04108: Fixed a bug affecting USD prices with 7+ decimal places of precision (e.g. `$0.0000001` or smaller).
+
+## 2.10.0
+
+### Minor Changes
+
+- Bumped to align version with dependent packages
+
+## 2.9.0
+
+### Minor Changes
+
+- 2250cae: Migrated project from coinbase/x402 to x402-foundation/x402 organization
+- d352574: Add SettlementOverrides support for partial settlement (upto scheme). Route handlers can call setSettlementOverrides() to settle less than the authorized maximum, enabling usage-based billing.
+
+### Patch Changes
+
+- 8cf3fca: Export all hook types and hook context interfaces from the server entry point
+- c0e3969: Fixed HTTPFacilitatorClient not following 308 redirects from facilitator endpoints. Normalized base URL to strip trailing slashes and explicitly set `redirect: "follow"` on all fetch calls for cross-runtime compatibility.
+
 ## 2.8.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@x402/evm",
-  "version": "2.8.0",
+  "version": "2.11.0",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
   "types": "./dist/cjs/index.d.ts",
@@ -24,8 +24,8 @@
     "ethereum"
   ],
   "license": "Apache-2.0",
-  "author": "Coinbase Inc.",
-  "repository": "https://github.com/coinbase/x402",
+  "author": "x402 Foundation",
+  "repository": "https://github.com/x402-foundation/x402",
   "description": "x402 Payment Protocol EVM Implementation",
   "devDependencies": {
     "@eslint/js": "^9.24.0",
@@ -148,6 +148,36 @@
       "require": {
         "types": "./dist/cjs/upto/facilitator/index.d.ts",
         "default": "./dist/cjs/upto/facilitator/index.js"
+      }
+    },
+    "./batch-settlement/client": {
+      "import": {
+        "types": "./dist/esm/batch-settlement/client/index.d.mts",
+        "default": "./dist/esm/batch-settlement/client/index.mjs"
+      },
+      "require": {
+        "types": "./dist/cjs/batch-settlement/client/index.d.ts",
+        "default": "./dist/cjs/batch-settlement/client/index.js"
+      }
+    },
+    "./batch-settlement/server": {
+      "import": {
+        "types": "./dist/esm/batch-settlement/server/index.d.mts",
+        "default": "./dist/esm/batch-settlement/server/index.mjs"
+      },
+      "require": {
+        "types": "./dist/cjs/batch-settlement/server/index.d.ts",
+        "default": "./dist/cjs/batch-settlement/server/index.js"
+      }
+    },
+    "./batch-settlement/facilitator": {
+      "import": {
+        "types": "./dist/esm/batch-settlement/facilitator/index.d.mts",
+        "default": "./dist/esm/batch-settlement/facilitator/index.mjs"
+      },
+      "require": {
+        "types": "./dist/cjs/batch-settlement/facilitator/index.d.ts",
+        "default": "./dist/cjs/batch-settlement/facilitator/index.js"
       }
     }
   },

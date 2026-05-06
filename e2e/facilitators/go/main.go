@@ -16,19 +16,6 @@ import (
 	"sync"
 	"time"
 
-	x402 "github.com/coinbase/x402/go"
-	"github.com/coinbase/x402/go/extensions/bazaar"
-	"github.com/coinbase/x402/go/extensions/eip2612gassponsor"
-	"github.com/coinbase/x402/go/extensions/erc20approvalgassponsor"
-	exttypes "github.com/coinbase/x402/go/extensions/types"
-	evmmech "github.com/coinbase/x402/go/mechanisms/evm"
-	exactevm "github.com/coinbase/x402/go/mechanisms/evm/exact/facilitator"
-	exactevmv1 "github.com/coinbase/x402/go/mechanisms/evm/exact/v1/facilitator"
-	uptoevm "github.com/coinbase/x402/go/mechanisms/evm/upto/facilitator"
-	svmmech "github.com/coinbase/x402/go/mechanisms/svm"
-	svm "github.com/coinbase/x402/go/mechanisms/svm/exact/facilitator"
-	svmv1 "github.com/coinbase/x402/go/mechanisms/svm/exact/v1/facilitator"
-	x402types "github.com/coinbase/x402/go/types"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -41,6 +28,19 @@ import (
 	solana "github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/gin-gonic/gin"
+	x402 "github.com/x402-foundation/x402/go"
+	"github.com/x402-foundation/x402/go/extensions/bazaar"
+	"github.com/x402-foundation/x402/go/extensions/eip2612gassponsor"
+	"github.com/x402-foundation/x402/go/extensions/erc20approvalgassponsor"
+	exttypes "github.com/x402-foundation/x402/go/extensions/types"
+	evmmech "github.com/x402-foundation/x402/go/mechanisms/evm"
+	exactevm "github.com/x402-foundation/x402/go/mechanisms/evm/exact/facilitator"
+	exactevmv1 "github.com/x402-foundation/x402/go/mechanisms/evm/exact/v1/facilitator"
+	uptoevm "github.com/x402-foundation/x402/go/mechanisms/evm/upto/facilitator"
+	svmmech "github.com/x402-foundation/x402/go/mechanisms/svm"
+	svm "github.com/x402-foundation/x402/go/mechanisms/svm/exact/facilitator"
+	svmv1 "github.com/x402-foundation/x402/go/mechanisms/svm/exact/v1/facilitator"
+	x402types "github.com/x402-foundation/x402/go/types"
 )
 
 const (
@@ -1104,13 +1104,40 @@ func main() {
 		items, total := bazaarCatalog.GetResources(limit, offset)
 
 		c.JSON(http.StatusOK, gin.H{
-			"x402Version": 1,
+			"x402Version": 2,
 			"items":       items,
 			"pagination": gin.H{
 				"limit":  limit,
 				"offset": offset,
 				"total":  total,
 			},
+		})
+	})
+
+	// GET /discovery/search - Search discovered resources using keyword matching
+	router.GET("/discovery/search", func(c *gin.Context) {
+		query := c.Query("query")
+		if query == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "query parameter is required"})
+			return
+		}
+
+		resourceType := c.Query("type")
+		limit := 0
+		if limitParam := c.Query("limit"); limitParam != "" {
+			fmt.Sscanf(limitParam, "%d", &limit)
+		}
+
+		items, _ := bazaarCatalog.SearchResources(query, resourceType, limit)
+		if items == nil {
+			items = []DiscoveredResource{}
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"x402Version":    2,
+			"resources":      items,
+			"partialResults": false,
+			"pagination":     nil,
 		})
 	})
 

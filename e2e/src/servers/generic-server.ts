@@ -1,6 +1,7 @@
 import { BaseProxy, RunConfig } from '../proxy-base';
 import { ServerProxy, ServerConfig } from '../types';
 import { verboseLog, errorLog } from '../logger';
+import { resolveEvmPermit2Asset } from '../networks/networks';
 
 export interface ProtectedResponse {
   message: string;
@@ -92,17 +93,32 @@ export class GenericServerProxy extends BaseProxy implements ServerProxy {
         EVM_NETWORK: evmNetwork,
         EVM_RPC_URL: config.networks.evm.rpcUrl,
         EVM_PAYEE_ADDRESS: config.evmPayTo,
-        EVM_PERMIT2_ASSET: config.networks.evm.permit2Asset || '',
+        EVM_PERMIT2_ASSET: resolveEvmPermit2Asset(config.networks),
 
         // SVM network config
         SVM_NETWORK: svmNetwork,
         SVM_RPC_URL: config.networks.svm.rpcUrl,
         SVM_PAYEE_ADDRESS: config.svmPayTo,
 
+        // AVM network config
+        AVM_NETWORK: config.networks.avm.caip2,
+        AVM_RPC_URL: config.networks.avm.rpcUrl,
+        AVM_PAYEE_ADDRESS: config.avmPayTo,
+
         // Aptos network config
         APTOS_NETWORK: config.networks.aptos.caip2,
         APTOS_RPC_URL: config.networks.aptos.rpcUrl,
         APTOS_PAYEE_ADDRESS: config.aptosPayTo,
+
+        // Hedera network config. HEDERA_ASSET / HEDERA_AMOUNT are only
+        // forwarded when set by the caller; the resource servers apply their
+        // own HBAR defaults (0.0.0 / 100000 tinybars) when absent, so passing
+        // an empty string here would clobber those defaults.
+        HEDERA_NETWORK: config.networks.hedera.caip2,
+        HEDERA_NODE_URL: config.networks.hedera.rpcUrl,
+        HEDERA_PAYEE_ADDRESS: config.hederaPayTo,
+        ...(config.hederaAsset !== undefined ? { HEDERA_ASSET: config.hederaAsset } : {}),
+        ...(config.hederaAmount !== undefined ? { HEDERA_AMOUNT: config.hederaAmount } : {}),
 
         // Stellar network config
         STELLAR_NETWORK: config.networks.stellar.caip2,
@@ -112,6 +128,13 @@ export class GenericServerProxy extends BaseProxy implements ServerProxy {
         // Facilitator
         FACILITATOR_URL: config.facilitatorUrl || '',
         MOCK_FACILITATOR_URL: config.mockFacilitatorUrl || '',
+
+        ...(config.batchSettlement
+          ? {
+              EVM_RECEIVER_AUTHORIZER_PRIVATE_KEY:
+                config.batchSettlement.receiverAuthorizerPrivateKey,
+            }
+          : {}),
       }
     };
 

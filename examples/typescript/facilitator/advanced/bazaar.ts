@@ -16,6 +16,7 @@ import {
 } from "@x402/core/types";
 import { toFacilitatorEvmSigner } from "@x402/evm";
 import { ExactEvmScheme } from "@x402/evm/exact/facilitator";
+import { UptoEvmScheme } from "@x402/evm/upto/facilitator";
 import { toFacilitatorSvmSigner } from "@x402/svm";
 import { ExactSvmScheme } from "@x402/svm/exact/facilitator";
 import { extractDiscoveryInfo, DiscoveryInfo } from "@x402/extensions/bazaar";
@@ -56,6 +57,7 @@ interface DiscoveredResource {
   accepts: PaymentRequirements[];
   discoveryInfo?: DiscoveryInfo;
   lastUpdated: string;
+  extensions?: Record<string, unknown>;
 }
 
 // BazaarCatalog stores discovered resources
@@ -81,6 +83,36 @@ class BazaarCatalog {
    */
   getAll(): DiscoveredResource[] {
     return Array.from(this.resources.values());
+  }
+
+  /**
+   * Search resources using case-insensitive keyword matching.
+   * Matches against resource URL, type, and extension values.
+   *
+   * @param query - Search query string
+   * @param type - Optional filter by resource type
+   * @param limit - Optional advisory maximum results
+   * @returns Matching resources with optional pagination hints
+   */
+  search(query: string, type?: string, limit?: number): DiscoveredResource[] {
+    const needle = query.toLowerCase();
+    let results = Array.from(this.resources.values()).filter((r) => {
+      const haystack = [
+        r.resource,
+        r.type,
+        r.description ?? "",
+        ...Object.values(r.extensions ?? {}),
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(needle);
+    });
+
+    if (type) {
+      results = results.filter((r) => r.type === type);
+    }
+
+    return limit !== undefined ? results.slice(0, limit) : results;
   }
 }
 
@@ -117,11 +149,12 @@ const facilitator = new x402Facilitator()
           resource: discovered.resourceUrl,
           description: discovered.description,
           mimeType: discovered.mimeType,
-          type: "http",
+          type: discovered.discoveryInfo.input.type,
           x402Version: discovered.x402Version,
           accepts: [context.requirements],
           discoveryInfo: discovered.discoveryInfo,
           lastUpdated: new Date().toISOString(),
+          extensions: {},
         });
         console.log("   ✅ Added to bazaar catalog");
       }
@@ -196,6 +229,7 @@ if (evmPrivateKey) {
     EVM_NETWORK,
     new ExactEvmScheme(evmSigner, { deployERC4337WithEIP6492: true }),
   );
+  facilitator.register(EVM_NETWORK, new UptoEvmScheme(evmSigner));
 }
 
 // Register SVM scheme if private key is provided
@@ -325,6 +359,37 @@ app.get("/discovery/resources", async (req, res) => {
     });
   } catch (error) {
     console.error("Discovery error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
+/**
+ * GET /discovery/search
+ * Search discovered resources using keyword matching
+ */
+app.get("/discovery/search", async (req, res) => {
+  try {
+    const query = req.query.query as string;
+    if (!query) {
+      return res.status(400).json({ error: "query parameter is required" });
+    }
+    const type = req.query.type as string | undefined;
+    const limit = req.query.limit
+      ? parseInt(req.query.limit as string)
+      : undefined;
+
+    const items = bazaarCatalog.search(query, type, limit);
+
+    res.json({
+      x402Version: 2,
+      resources: items,
+      partialResults: false,
+      pagination: null,
+    });
+  } catch (error) {
+    console.error("Discovery search error:", error);
     res.status(500).json({
       error: error instanceof Error ? error.message : "Unknown error",
     });

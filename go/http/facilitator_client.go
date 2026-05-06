@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	x402 "github.com/coinbase/x402/go"
-	"github.com/coinbase/x402/go/types"
+	x402 "github.com/x402-foundation/x402/go"
+	"github.com/x402-foundation/x402/go/types"
 )
 
 // ============================================================================
@@ -38,7 +38,7 @@ type AuthHeaders struct {
 	Verify    map[string]string
 	Settle    map[string]string
 	Supported map[string]string
-	Discovery map[string]string
+	Bazaar    map[string]string
 }
 
 // FacilitatorConfig configures the HTTP facilitator client

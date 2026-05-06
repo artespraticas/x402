@@ -18,6 +18,8 @@ Register hooks on the core resource server for verification and settlement lifec
 * **onAfterSettle** — Runs after successful settlement.
 * **onSettleFailure** — Runs on settlement failure. Return `{ recovered: true, result }` to override.
 
+These server-level hooks run for every payment regardless of which extensions are active. Extensions can also register the same hooks scoped to their own key via the `hooks` property on `ResourceServerExtension` — those run only when the extension is declared on the route. See [Extensions Overview](/extensions/overview) for details.
+
 <Tabs>
   <Tab title="TypeScript">
     ```typescript
@@ -70,7 +72,7 @@ Register hooks on the core resource server for verification and settlement lifec
   </Tab>
   <Tab title="Go">
     ```go
-    import x402 "github.com/coinbase/x402/go"
+    import x402 "github.com/x402-foundation/x402/go"
 
     server := x402.Newx402ResourceServer(facilitatorClient)
 
@@ -121,8 +123,8 @@ Register hooks for HTTP-specific request handling before payment processing. Use
     ```go
     import (
         "context"
-        x402 "github.com/coinbase/x402/go"
-        x402http "github.com/coinbase/x402/go/http"
+        x402 "github.com/x402-foundation/x402/go"
+        x402http "github.com/x402-foundation/x402/go/http"
     )
 
     // Create resource server
@@ -210,7 +212,7 @@ Register hooks on the core client for payment payload creation lifecycle events.
   </Tab>
   <Tab title="Go">
     ```go
-    import x402 "github.com/coinbase/x402/go"
+    import x402 "github.com/x402-foundation/x402/go"
 
     client := x402.Newx402Client()
 
@@ -342,7 +344,7 @@ Register hooks on the facilitator for verification and settlement lifecycle even
   </Tab>
   <Tab title="Go">
     ```go
-    import x402 "github.com/coinbase/x402/go"
+    import x402 "github.com/x402-foundation/x402/go"
 
     facilitator := x402.Newx402Facilitator()
 
