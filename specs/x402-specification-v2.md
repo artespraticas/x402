@@ -8,7 +8,7 @@ This specification defines the core x402 protocol for internet-native payments. 
 
 - **Protocol fundamentals**: Payment requirements format, payment payload structure, and core message schemas
 - **Facilitator interface**: Standard APIs for payment verification and settlement
-- **Payment schemes**: Extensible payment methods (currently supporting the "exact" scheme)
+- **Payment schemes**: Extensible payment methods (including `exact`, `upto`, and `batch-settlement`; see `specs/schemes/`)
 - **Security considerations**: Replay attack prevention and trust minimization
 
 **Out of Scope**: This specification does not include:
@@ -24,7 +24,7 @@ This specification defines the core x402 protocol for internet-native payments. 
 x402 is made up of three core components:
 
 1. **Types**: Core data structures (e.g., `PaymentRequirements`, `PaymentPayload`, `SettlementResponse`) that are independent of both transport mechanism and payment scheme
-2. **Logic**: Payment formation and verification logic that depends on the payment scheme (e.g., exact, deferred) and network (e.g., evm, solana, etc.)
+2. **Logic**: Payment formation and verification logic that depends on the payment scheme (e.g., exact, upto, batch-settlement) and network (e.g., evm, solana, etc.)
 3. **Representation**: How payment data is transmitted and signaled, which depends on the transport mechanism (e.g., HTTP, MCP, A2A)
 
 **1. Overview**
@@ -160,7 +160,7 @@ The client includes payment authorization as JSON in the payment payload field:
     "mimeType": "application/json"
   },
   "accepted": {
-  "scheme": "exact",
+    "scheme": "exact",
     "network": "eip155:84532",
     "amount": "10000",
     "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
@@ -354,7 +354,7 @@ Example with actual data:
       "mimeType": "application/json"
     },
     "accepted": {
-    "scheme": "exact",
+      "scheme": "exact",
       "network": "eip155:84532",
       "amount": "10000",
       "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
